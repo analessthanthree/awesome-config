@@ -1,3 +1,6 @@
+-- Global namespace to talk between modules
+gn = require("globalNamespace")
+
 local widgets = {}
 
 -- Keyboard map indicator and switcher
@@ -31,5 +34,10 @@ end
 
 -- Create a textclock widget
 widgets.mytextclock = wibox.widget.textclock()
+widgets.mytextclock:connect_signal("button::press",
+  function(_, _, _, button)
+    if button == 1 then awful.spawn(gn.terminal .. " -e bash") end
+  end
+)
 
 return widgets

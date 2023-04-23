@@ -31,18 +31,19 @@ theme.fg_focus      = "#ffffff"
 theme.fg_urgent     = "#ffffff"
 theme.fg_minimize   = "#ffffff"
 
-theme.useless_gap   = dpi(4)
-theme.border_width  = dpi(2)
+theme.useless_gap   = dpi(6)
+theme.border_width  = dpi(4)
 theme.border_normal = "#000000" -- original
 theme.border_normal  = "#68037e" -- mine
 theme.border_focus  = "#535d6c" -- original
 theme.border_focus = "#e26ffc" -- mine
 
 -- To style separators
-theme.separator_color = "#220022"
+theme.separator_color = "#220022" -- original
+-- theme.separator_color = "#550055" -- new
 
 -- Wibar heights
-theme.wibar_height = dpi(30)
+theme.wibar_height = dpi(35)
 
 -- According to the documentation for the "client" class, this is the same as
 -- border.focus ... so we're going to comment it out

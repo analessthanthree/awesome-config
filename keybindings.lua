@@ -3,9 +3,13 @@ local kb = {}
 kb.globalkeys = gears.table.join(
     awful.key({ gn.modkey,           }, "s",      hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
-    awful.key({ gn.modkey,           }, "Left",   awful.tag.viewprev,
+    awful.key({ gn.modkey,           }, "Left",   function () awful.tag.viewidx(-2) end,
+              {description = "view tag to the left of current tag", group = "tag"}),
+    awful.key({ gn.modkey,           }, "Right",  function () awful.tag.viewidx(2) end,
+              {description = "view tag to the right of current tag", group = "tag"}),
+    awful.key({ gn.modkey,           }, "Up",   awful.tag.viewprev,
               {description = "view previous", group = "tag"}),
-    awful.key({ gn.modkey,           }, "Right",  awful.tag.viewnext,
+    awful.key({ gn.modkey,           }, "Down",  awful.tag.viewnext,
               {description = "view next", group = "tag"}),
     awful.key({ gn.modkey,           }, "Escape", awful.tag.history.restore,
               {description = "go back", group = "tag"}),
@@ -84,16 +88,18 @@ kb.globalkeys = gears.table.join(
 
     -- Applications
     awful.key({ gn.modkey }, "b", function () awful.spawn("firefox") end,
-    		{description = "Launch firefox", group = "applications"}),
-    awful.key({ gn.modkey }, "t", function () awful.spawn(gn.terminal .. " -e htop") end,
-    		{description = "Launch htop", group = "applications"}),
+    		{description = "Launch web browser", group = "applications"}),
+    awful.key({ gn.modkey }, "t", function () awful.spawn(gn.terminal .. " -e btop") end,
+    		{description = "Launch btop", group = "applications"}),
+    awful.key({ gn.modkey, "Shift" }, "n", function () awful.spawn(gn.editor_cmd .. " " .. os.getenv("HOME") .. "/.TODO +\"cd .TODO\"") end,
+    		{description = "Open TODO list dir", group = "applications"}),
 
     -- PC Control
     -- See how I can make this open as a float window?
     awful.key({ gn.modkey }, "a", function () awful.spawn("pavucontrol -t 3") end,
     		{description = "open audio control", group = "pc control"}),
     -- Take Screenshot
-    awful.key({  }, "Print", function () awful.spawn("flameshot full -p /home/ana/Pictures/") end,
+    awful.key({  }, "Print", function () awful.spawn("flameshot full -p " .. os.getenv("HOME") .. "/Pictures/") end,
     		{description = "Screenshot tool", group = "pc control"}),
 
     -- Edit Configs
@@ -162,13 +168,18 @@ kb.clientkeys = gears.table.join(
             c.maximized_horizontal = not c.maximized_horizontal
             c:raise()
         end ,
-        {description = "(un)maximize horizontally", group = "client"})
+        {description = "(un)maximize horizontally", group = "client"}),
+    awful.key({ gn.modkey, "Control"   }, "t",
+        function (c)
+            awful.titlebar.toggle(c)
+        end ,
+        {description = "toggle titlebar", group = "client"})
 )
 
 -- Bind all key numbers to tags.
 -- Be careful: we use keycodes to make it work on any keyboard layout.
 -- This should map on the top row of your keyboard, usually 1 to 9.
-for i = 1, 9 do
+for i = 1, 10 do
     kb.globalkeys = gears.table.join(kb.globalkeys,
         -- View tag only.
         awful.key({ gn.modkey }, "#" .. i + 9,

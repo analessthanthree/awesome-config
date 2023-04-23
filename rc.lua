@@ -44,6 +44,10 @@ gn.menu = require("menu")
 gn.widgets = require("widgets")
 --- }}}
 
+-- For widths and stuff I guess
+local xresources = require("beautiful.xresources")
+local dpi = xresources.apply_dpi
+
 local taglist_buttons = gears.table.join(
                     awful.button({ }, 1, function(t) t:view_only() end),
                     awful.button({ gn.modkey }, 1, function(t)
@@ -92,7 +96,7 @@ awful.screen.connect_for_each_screen(function(s)
     set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }, s, awful.layout.layouts[1])
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -110,14 +114,53 @@ awful.screen.connect_for_each_screen(function(s)
     s.mytaglist = awful.widget.taglist {
         screen  = s,
         filter  = awful.widget.taglist.filter.all,
-        buttons = taglist_buttons
+        buttons = taglist_buttons,
+        layout = {
+            forced_num_rows = 2,
+            forced_num_cols = 5,
+            orientation = "horizontal",
+            spacing = dpi(3),
+            layout = wibox.layout.grid,
+        },
     }
 
     -- Create a tasklist widget
     s.mytasklist = awful.widget.tasklist {
         screen  = s,
         filter  = awful.widget.tasklist.filter.currenttags,
-        buttons = tasklist_buttons
+        buttons = tasklist_buttons,
+        style = {
+            shape = gears.shape.rounded_rect,
+        },
+        layout   = {
+            spacing = 5,
+            layout  = wibox.layout.flex.horizontal
+        },
+        -- Notice that there is *NO* wibox.wibox prefix, it is a template,
+        -- not a widget instance.
+        widget_template = {
+            {
+                {
+                    {
+                        id     = 'icon_role',
+                        widget = wibox.widget.imagebox,
+                    },
+                    margins = 2,
+                    widget  = wibox.container.margin,
+                },
+                {
+                    id     = 'text_role',
+                    widget = wibox.widget.textbox,
+                },
+                left  = 10,
+                right = 10,
+                forced_width = dpi(200),
+                layout = wibox.layout.fixed.horizontal,
+                widget = wibox.container.margin
+            },
+            id     = 'background_role',
+            widget = wibox.container.background,
+        },
     }
 
     -- Create a separator widget to ensure left and right widgets are aligned correctly
@@ -127,38 +170,64 @@ awful.screen.connect_for_each_screen(function(s)
     s.mywiboxtop = awful.wibar({
       position = "top",
       screen = s,
-      height = beautiful.wibar_height
+      height = beautiful.wibar_height,
+      width = s.geometry.width - 4*beautiful.useless_gap,
+	  shape = gears.shape.rounded_rect,
     })
+
+    -- Create the top wibox
+    -- s.mywiboxtop = wibox {
+    --   screen = s,
+    --   height = beautiful.wibar_height,
+	--   shape = gears.shape.rounded_rect,
+    --   width = s.geometry.width - 4*beautiful.useless_gap,
+    --   x = s.geometry.width + 2*beautiful.useless_gap,
+    --   y = beautiful.useless_gap,
+    --   visible = true,
+    --   ontop = true,
+    --   type = "dock", -- ???
+    -- }
 
     -- Add widgets to the wibox
     s.mywiboxtop:setup {
-        layout = wibox.layout.align.horizontal,
-        { -- Left widgets
-            layout = wibox.layout.fixed.horizontal,
-            gn.menu.mylauncher,
-            s.mytaglist,
-            s.mypromptbox,
-        },
-        s.separatortop,
-        { -- Right widgets
-            layout = wibox.layout.fixed.horizontal,
-            --gn.widgets.mykeyboardlayout,
-            wibox.widget.systray(),
-            gn.widgets.mytextclock,
-            s.mylayoutbox,
-        },
+		{
+            { -- Left widgets
+                layout = wibox.layout.fixed.horizontal,
+                gn.menu.mylauncher,
+                s.mytaglist,
+                s.mypromptbox,
+            },
+            s.separatortop,
+            { -- Right widgets
+                layout = wibox.layout.fixed.horizontal,
+                --gn.widgets.mykeyboardlayout,
+                wibox.widget.systray(),
+                gn.widgets.mytextclock,
+                s.mylayoutbox,
+            },
+            layout = wibox.layout.align.horizontal,
+		},
+		widget = wibox.container.margin,
     }
 
     -- Create the bottom wibar
-    s.mywiboxbot = awful.wibar({ position = "bottom", screen = s})
+    s.mywiboxbot = awful.wibar {
+		position = "bottom",
+		screen = s,
+		height = beautiful.wibar_height,
+		width = s.geometry.width - 4*beautiful.useless_gap,
+		shape = gears.shape.rounded_rect,
+	}
 
     s.separatorbot = gn.widgets.separator_template(s,nil)
 
     -- Add widgets to the wibox
     s.mywiboxbot:setup {
-        layout = wibox.layout.align.horizontal,
+        -- s.separatorbot,
         s.mytasklist,
-        s.separatorbot
+        s.separatorbot,
+        -- expand = "outside",
+        layout = wibox.layout.align.horizontal,
     }
 
 end)
@@ -207,7 +276,8 @@ awful.rules.rules = {
                      keys = gn.keybindings.clientkeys,
                      buttons = clientbuttons,
                      screen = awful.screen.preferred,
-                     placement = awful.placement.no_overlap+awful.placement.no_offscreen
+                     placement = awful.placement.no_overlap+awful.placement.no_offscreen,
+					 size_hints_honor = false
      }
     },
 
@@ -244,7 +314,7 @@ awful.rules.rules = {
 
     -- Add titlebars to normal clients and dialogs
     { rule_any = {type = { "normal", "dialog" }
-      }, properties = { titlebars_enabled = true }
+      }, properties = { titlebars_enabled = false }
     },
 
     -- Set Firefox to always map on the tag named "2" on screen 1.
@@ -265,6 +335,11 @@ client.connect_signal("manage", function (c)
       and not c.size_hints.program_position then
         -- Prevent clients from being unreachable after screen count changes.
         awful.placement.no_offscreen(c)
+    end
+
+	-- Set client shape
+	c.shape = function(cr, w, h)
+        gears.shape.rounded_rect(cr, w, h, 10)
     end
 end)
 
